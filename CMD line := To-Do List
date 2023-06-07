@@ -1,0 +1,203 @@
+//Command line supported TO-Do List program in Golang. If you find any confusion, just copy paste the code in ChatGPT and ask it to explain.
+
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+	"time"
+)
+
+type Task struct {
+	ID          int       `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	DueDate     time.Time `json:"duedate"`
+	Completed   bool      `json:"completed"`
+}
+
+var tasks []Task
+
+func main() {
+	loadTasksFromFile()
+
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		fmt.Println("\nTo-Do List:\n1. Add Task\n2. List Tasks\n3. Update Task\n4. Delete Task\n5. Exit\n")
+
+		fmt.Print("Choose an option (1-5): ")
+		scanner.Scan()
+		option := scanner.Text()
+
+		switch option {
+		case "1":
+			addTask(scanner)
+		case "2":
+			listTasks()
+		case "3":
+			updateTask(scanner)
+		case "4":
+			deleteTask(scanner)
+		case "5":
+			saveTaskToFile()
+			fmt.Println("Exiting To-Do List. Goodbye!")
+			return
+		default:
+			fmt.Println("Invalid option, please try again")
+		}
+	}
+}
+
+func addTask(scanner *bufio.Scanner) {
+	// Prompt the user for task details (title, description, due date)
+	// Create a new Task struct with the provided details
+	// Append the new task to the `tasks` slice
+	fmt.Print("Add task: \nEnter the Task Title: ")
+	scanner.Scan()
+	title := scanner.Text()
+
+	fmt.Print("Enter Description: ")
+	scanner.Scan()
+	description := scanner.Text()
+
+	fmt.Print("Enter Due Date (yyyy-mm-dd): ")
+	scanner.Scan()
+	dueDateString := scanner.Text()
+
+	dueDate, err := time.Parse("2006-01-02", dueDateString)
+	if err != nil {
+		fmt.Println("Invalid Due Date format, Task not added.")
+		return
+	}
+
+	task := Task{
+		ID:          generateTaskID(),
+		Title:       title,
+		Description: description,
+		DueDate:     dueDate,
+		Completed:   false,
+	}
+
+	tasks = append(tasks, task)
+	fmt.Println("Task Added Successfully.")
+}
+
+func listTasks() {
+	fmt.Println("\nTask List: ")
+	if len(tasks) == 0 {
+		fmt.Println("No Tasks Found")
+		return
+	}
+
+	for _, task := range tasks {
+		fmt.Printf("\nID: %d\nTitle: %s\nDescription: %s\nDue Date: %s\nCompleted: %t\n",
+			task.ID, task.Title, task.Description, task.DueDate.Format("2006-01-02"), task.Completed)
+	}
+}
+
+func updateTask(scanner *bufio.Scanner) {
+	fmt.Println("\nUpdate Task")
+	fmt.Print("Enter the Task ID to update: ")
+	scanner.Scan()
+	taskIDString := scanner.Text()
+	taskID, err := strconv.Atoi(taskIDString)
+	if err != nil {
+		fmt.Println("Invalid Task ID. Task not updated.")
+		return
+	}
+
+	for i, task := range tasks {
+		if task.ID == taskID {
+			fmt.Printf("Updating Task %d\n", taskID)
+
+			fmt.Print("Enter New Task Title: ")
+			scanner.Scan()
+			title := scanner.Text()
+
+			fmt.Print("Enter new Description: ")
+			scanner.Scan()
+			description := scanner.Text()
+
+			fmt.Print("Enter the new Due Date: ")
+			scanner.Scan()
+			dueDateString := scanner.Text()
+			dueDate, err := time.Parse("2006-01-02", dueDateString)
+			if err != nil {
+				fmt.Println("Invalid due date format. Task not updated.")
+				return
+			}
+
+			task.Title = title
+			task.Description = description
+			task.DueDate = dueDate
+			tasks[i] = task
+
+			fmt.Println("Task updated succesfully.")
+			return
+		}
+	}
+	fmt.Printf("Task with ID %d not found.\n", taskID)
+}
+
+func deleteTask(scanner *bufio.Scanner) {
+	fmt.Println("\nDelete Task: ")
+	fmt.Print("Enter the task ID to delete: ")
+	scanner.Scan()
+	taskIDString := scanner.Text()
+	taskID, err := strconv.Atoi(taskIDString)
+	if err != nil {
+		fmt.Println("Invalid Task ID. Task not deleted")
+		return
+	}
+
+	for i, task := range tasks {
+		if task.ID == taskID {
+			tasks = append(tasks[:i], tasks[i+1:]...)
+			fmt.Println("Task deleted Successfully. ")
+			return
+		}
+	}
+
+	fmt.Printf("Task with ID %d not found", taskID)
+}
+
+func generateTaskID() int {
+	if len(tasks) == 0 {
+		return 1
+	}
+
+	return tasks[len(tasks)-1].ID + 1
+}
+
+func loadTasksFromFile() {
+	file, err := os.Open("tasks.json")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&tasks)
+	if err != nil {
+		fmt.Println("error loading tasks from file: ", err)
+	}
+}
+
+func saveTaskToFile() {
+	file, err := os.Create("tasks.json")
+	if err != nil {
+		fmt.Println("Error saving Task to file: ", err)
+		return
+	}
+
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(tasks)
+	if err != nil {
+		fmt.Println("Error saving tasks to file: ", err)
+	}
+}
