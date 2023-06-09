@@ -1,0 +1,36 @@
+//basics of robotgo using Golang. Make sure to install MinGW that is appropriate to your computer architecture. Also if you are on MacOS, then you would have to provide permissions in accessibility to VScode.
+//Also don't forget to install robotgo using github.com/go-vgo/robotgo in terminal.
+//Also change the mouse coordinates accoridng to your screen.
+
+package main
+
+import (
+	"fmt"
+
+	"github.com/go-vgo/robotgo"
+)
+
+func main() {
+	//getMousePosi() //this function will help you to get mouse position on your screen. Comment out others when u use this.
+	robotgo.MouseSleep = 100 //This will make sure that the mouse sleeps after every step otherwise, some steps may not work as the program runs quite fast.
+	copyandpaste()
+
+}
+
+func copyandpaste() {
+	robotgo.Move(358, 226)
+	robotgo.Click()
+	robotgo.TypeStr("//What's up??")
+	robotgo.Click() //by default uses left click once. for right click mention "right" in value of function.
+	robotgo.Click()
+	robotgo.KeyTap("c", "ctrl") //make sure that special keys come afterwards and alphabets come before
+	robotgo.Move(1358, 226)
+	robotgo.Click()
+	robotgo.KeyTap("v", "ctrl")
+
+}
+
+func getMousePosi() {
+	robotgo.MilliSleep(200)
+	fmt.Println(robotgo.GetMousePos())
+}
