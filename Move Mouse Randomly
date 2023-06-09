@@ -1,0 +1,20 @@
+//moving mouse pointer randomly using Golang and Robotgo
+
+package main
+
+import (
+	"math/rand"
+
+	"github.com/go-vgo/robotgo"
+)
+
+func main() {
+	robotgo.MouseSleep = 100
+	moveMouse()
+}
+
+func moveMouse() {
+	for {
+		robotgo.MoveSmooth(rand.Intn(1500), rand.Intn(800))
+	}
+}
